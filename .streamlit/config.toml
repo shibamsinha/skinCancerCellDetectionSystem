@@ -9,7 +9,8 @@ baseRadius = "0.6rem"
 showSidebarBorder = true
 
 [server]
-address = "localhost"     # local-only: uploads never leave this machine
+# No `address` here: hosting platforms (e.g. Streamlit Community Cloud) manage the network binding.
+# For a local-only run, start the app with `--server.address localhost` (see README).
 maxUploadSize = 20          # MB; matches skincancer.preprocessing.image_loader.MAX_UPLOAD_BYTES
 runOnSave = false
 

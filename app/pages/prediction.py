@@ -109,14 +109,17 @@ with right:
 if run and image is not None:
     status = by_name[model_name]
     try:
+        if state.needs_download(model_name):
+            with st.spinner(f"Downloading the trained {status.display_name} weights (first use only)…"):
+                state.get_predictor(model_name)
         with st.spinner(f"Running {status.display_name} and computing Grad-CAM…"):
             predictor = state.get_predictor(model_name)
             prediction = predictor.predict(image)
             explanation = predictor.explain(image)
         ss.result = {"hash": file_hash, "model": model_name, "prediction": prediction,
                      "explanations": {prediction.label: explanation}}
-    except ModelUnavailableError:
-        st.error("The weights for this model are not available. Train it first.")
+    except ModelUnavailableError as exc:  # includes WeightsDownloadError
+        st.error(f"The weights for this model are not available. {exc}")
     except Exception as exc:  # noqa: BLE001 - surface any inference failure to the user
         st.error(f"Inference failed: {type(exc).__name__}: {exc}")
 

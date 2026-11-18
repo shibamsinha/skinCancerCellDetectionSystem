@@ -17,7 +17,7 @@ import streamlit as st
 
 from skincancer.config import ProjectConfig, load_config
 from skincancer.evaluation.style import MODEL_ORDER
-from skincancer.inference import Predictor
+from skincancer.inference import Predictor, ensure_weights, weights_available, weights_local
 
 
 @st.cache_resource(show_spinner=False)
@@ -58,13 +58,14 @@ def model_statuses() -> list[ModelStatus]:
     for n in names:
         m = cfg.models[n]
         ckpt = cfg.checkpoint_dir(n) / "best.pt"
+        trained = weights_available(cfg, n)  # local, or published and downloaded on first use
         status = read_json(cfg.results_dir(n) / "status.json") or {}
         out.append(ModelStatus(
             name=n, display_name=m.display_name, description=m.description, architecture=m.architecture,
-            input_size=m.input_size, pretrained=m.pretrained, trained=ckpt.exists(),
+            input_size=m.input_size, pretrained=m.pretrained, trained=trained,
             evaluated=(cfg.results_dir(n) / "metrics.json").exists(), checkpoint=ckpt,
             is_primary=n == cfg.primary_model,
-            training_state=status.get("state", "completed" if ckpt.exists() else "none"),
+            training_state=status.get("state", "completed" if trained else "none"),
         ))
     return out
 
@@ -76,7 +77,8 @@ def _mtime(path: Path) -> float:
         return 0.0
 
 
-@st.cache_resource(show_spinner=False, max_entries=3)
+# At most two models in memory: small hosts (e.g. Streamlit Community Cloud) have limited RAM.
+@st.cache_resource(show_spinner=False, max_entries=2)
 def _load_predictor(checkpoint: str, _mtime_key: float) -> Predictor:
     predictor = Predictor(checkpoint, device="auto")
     predictor.warmup()  # compile GPU kernels once, so reported inference times are steady-state
@@ -84,9 +86,18 @@ def _load_predictor(checkpoint: str, _mtime_key: float) -> Predictor:
 
 
 def get_predictor(model_name: str) -> Predictor:
-    """Load (or reuse) the trained predictor; raises ``ModelUnavailableError`` if untrained."""
-    ckpt = get_config().checkpoint_dir(model_name) / "best.pt"
+    """Load (or reuse) the trained predictor.
+
+    Downloads and verifies the published weights first if they are not on disk.
+    Raises ``ModelUnavailableError`` (or its subclass ``WeightsDownloadError``).
+    """
+    ckpt = ensure_weights(get_config(), model_name)
     return _load_predictor(str(ckpt), _mtime(ckpt))
+
+
+def needs_download(model_name: str) -> bool:
+    """True if the model's weights still have to be fetched (first use on a fresh install)."""
+    return not weights_local(get_config(), model_name)
 
 
 @st.cache_data(show_spinner=False)

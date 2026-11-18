@@ -58,12 +58,15 @@ python scripts/prepare_data.py
 python scripts/train.py --model modified_densenet201
 bash scripts/train_all.sh
 
-# 5. Launch the web application
-streamlit run app/main.py
+# 5. Launch the web application (local only)
+streamlit run app/main.py --server.address localhost
 ```
 
-The app runs at <http://localhost:8501> and binds to `localhost` only. Uploaded images are processed in memory and
-never written to disk.
+The app runs at <http://localhost:8501>. Uploaded images are processed in memory and never written to disk.
+
+**Only want the app?** Steps 2–4 are optional. The trained weights for all six models are published as a GitHub
+release (`weights-v1`). When `checkpoints/<model>/best.pt` is missing, the app downloads that file on first use
+(10–97 MB) and verifies its SHA-256 before loading it. Locally trained weights always take precedence.
 
 ### Running on a laptop (thermal and memory limits)
 
@@ -79,6 +82,23 @@ Training takes roughly twice as long but runs much cooler. On a machine with act
 `cooldown_seconds_per_batch: 0` and `thermal_guard: false`. Training can be stopped at any time and continued
 with `--resume`.
 
+### Deploying to Streamlit Community Cloud
+
+The repository is ready for [Streamlit Community Cloud](https://share.streamlit.io) (free; apps get up to about
+2.7 GB of memory and 2 CPU cores):
+
+1. Sign in at <https://share.streamlit.io> with GitHub and click **Create app** → *Yup, I have an app*.
+2. Repository `shibamsinha/skinCancerCellDetectionSystem`, branch `main`, main file path `app/main.py`.
+3. Optionally choose a subdomain under **App URL** (`<name>.streamlit.app`). Custom top-level domains are not
+   supported on Community Cloud.
+4. **Advanced settings** → Python **3.12** or **3.13**. On these versions `requirements.txt` installs the CPU-only
+   PyTorch wheels (≈190 MB instead of several GB of CUDA libraries). No secrets are needed.
+5. Deploy. The first start installs dependencies (a few minutes). Each model's weights are downloaded the first time
+   someone selects it. The app keeps at most two models in memory.
+
+Uploaded images are processed in memory on Streamlit's servers and are not stored by the app. HAM10000 is
+licensed CC BY-NC 4.0: keep the deployment non-commercial.
+
 ### Dataset setup without the download script
 
 Download HAM10000 from Kaggle (`kmader/skin-cancer-mnist-ham10000`) or Harvard Dataverse
@@ -91,10 +111,11 @@ Download HAM10000 from Kaggle (`kmader/skin-cancer-mnist-ham10000`) or Harvard D
   `checkpoints/<model>/last.pt` (full resume state) after every epoch.
 - Resume an interrupted run with `python scripts/train.py --model <name> --resume`, or
   `bash scripts/train_all.sh --resume`.
-- The app lists only models that have a `best.pt`. It never shows predictions from untrained weights.
+- The app lists a model only if it has a local `best.pt` or a published checkpoint with a known SHA-256
+  (`configs/default.yaml` → `weights`). It never shows predictions from untrained weights.
 - Checkpoints contain only tensors and plain Python values and are loaded with `torch.load(weights_only=True)`.
-- Checkpoints are not committed to git (each is about 75 MB). To move trained models to another machine, copy the
-  `checkpoints/` and `results/` folders.
+- Checkpoints are not committed to git (up to 97 MB each). The `best.pt` files used for the reported results are
+  attached to the `weights-v1` GitHub release as `<model>.pt`.
 
 Available model keys (`python scripts/train.py --list`): `modified_densenet201` (primary), `densenet201`
 (ablation), `mobilenet_v2`, `resnet50`, `xception`, `googlenet`.

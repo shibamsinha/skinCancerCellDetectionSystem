@@ -121,6 +121,14 @@ class PathsConfig:
 
 
 @dataclass
+class WeightsConfig:
+    """Published trained checkpoints, fetched when ``checkpoints/<model>/best.pt`` is missing."""
+
+    release_url: str = ""  # base URL; each asset is f"{release_url}/{model_name}.pt"
+    sha256: dict[str, str] = field(default_factory=dict)  # model name -> expected SHA-256 (hex)
+
+
+@dataclass
 class ProjectConfig:
     seed: int = 42
     data: DataConfig = field(default_factory=DataConfig)
@@ -129,6 +137,7 @@ class ProjectConfig:
     training: TrainingConfig = field(default_factory=TrainingConfig)
     paths: PathsConfig = field(default_factory=PathsConfig)
     resources: ResourceConfig = field(default_factory=ResourceConfig)
+    weights: WeightsConfig = field(default_factory=WeightsConfig)
     primary_model: str = "modified_densenet201"
     models: dict[str, ModelConfig] = field(default_factory=dict)
 
@@ -218,6 +227,14 @@ def validate_config(cfg: ProjectConfig) -> None:
                 raise ConfigError(f"models.{name}.phases.{p.name}: epochs >= 1 and learning_rate > 0 required")
         if m.input_size < 32:
             raise ConfigError(f"models.{name}.input_size must be >= 32")
+    w = cfg.weights
+    if w.release_url and not w.release_url.startswith("https://"):
+        raise ConfigError("weights.release_url must be an https:// URL")
+    for name, digest in w.sha256.items():
+        if name not in cfg.models:
+            raise ConfigError(f"weights.sha256.{name}: unknown model")
+        if not (isinstance(digest, str) and len(digest) == 64 and all(c in "0123456789abcdef" for c in digest.lower())):
+            raise ConfigError(f"weights.sha256.{name}: expected a 64-character hex SHA-256 digest")
 
 
 def load_config(path: str | Path | None = None, overrides: dict[str, Any] | None = None) -> ProjectConfig:

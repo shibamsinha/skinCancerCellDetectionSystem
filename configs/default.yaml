@@ -59,6 +59,19 @@ paths:
   checkpoints_dir: checkpoints
   results_dir: results
 
+# Trained checkpoints published as GitHub release assets (<release_url>/<model>.pt). When
+# checkpoints/<model>/best.pt is missing (fresh clone, Streamlit Community Cloud), the app downloads
+# the file on first use and verifies its SHA-256 before loading. Locally trained weights always win.
+weights:
+  release_url: https://github.com/shibamsinha/skinCancerCellDetectionSystem/releases/download/weights-v1
+  sha256:
+    modified_densenet201: 36cecd180d9bdc7828663356b1d43de5c964760fbbfe1d0d6a3aa4c2d7b8e139
+    densenet201: a56de51ef18b26ce480d58ea28b47cbd718e7b5e05f136ebc81c25a306b7bd37
+    resnet50: 5e5cca4116b6fd5b0815a38cba0b2dfff5a1a1cbd1778e0b533ca179f90399ce
+    mobilenet_v2: 743ca3b99d48d65dc1d549b7eef55621a969113f02dea429c69a92e41302170b
+    xception: 4d77c5c2c4b85f7736bb7a71c0f43b819aa1a527dc6164f49bae6749c833a43e
+    googlenet: 4544cfd58062386d1cd2f96f781c24dc29e5753c0e70d002b2211665d2f97852
+
 # Phases: "new_layers" = backbone frozen, train additional convs + head (transfer learning);
 #         "last_block" = additionally unfreeze the last backbone stage (fine-tuning);
 #         "all" = every parameter trainable (used for the from-scratch GoogleNet).

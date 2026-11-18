@@ -71,6 +71,7 @@ def synthetic_cfg(synthetic_data):
         "training": {"device": "cpu", "num_workers": 0, "batch_size": 8, "log_every_n_batches": 0},
         "paths": {"checkpoints_dir": str(root / "checkpoints"), "results_dir": str(root / "results")},
         "resources": {"nice": 0, "torch_threads": 0, "cooldown_seconds_per_batch": 0.0, "thermal_guard": False},
+        "weights": {"release_url": ""},  # tests never download published weights
     }
     cfg = load_config(overrides=overrides)
     return cfg
