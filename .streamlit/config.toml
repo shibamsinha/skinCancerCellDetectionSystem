@@ -1,0 +1,20 @@
+[theme]
+base = "light"
+primaryColor = "#1f6fc5"
+backgroundColor = "#f5f7fa"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#14202e"
+font = "sans serif"
+baseRadius = "0.6rem"
+showSidebarBorder = true
+
+[server]
+address = "localhost"     # local-only: uploads never leave this machine
+maxUploadSize = 20          # MB; matches skincancer.preprocessing.image_loader.MAX_UPLOAD_BYTES
+runOnSave = false
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"

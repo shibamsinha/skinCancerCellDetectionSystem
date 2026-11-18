@@ -1,0 +1,16 @@
+# Tested with Python 3.13 on macOS (Apple M1, MPS). Versions are the ones used to
+# produce the checkpoints and results in this repository.
+torch==2.10.0
+torchvision==0.25.0
+timm==1.0.31            # Xception (legacy_xception: original Keras ImageNet weights, ported)
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+scipy==1.16.3
+pillow==12.0.0
+matplotlib==3.10.6
+plotly==6.3.0
+streamlit==1.51.0
+pyyaml==6.0.3
+requests==2.32.5        # dataset download script
+pytest==8.4.2           # tests

@@ -1,0 +1,101 @@
+{
+  "model_name": "googlenet",
+  "device": "mps",
+  "epochs_run": 10,
+  "best_epoch": 10,
+  "best_phase": "from_scratch",
+  "monitor": "val_roc_auc",
+  "best_monitor_value": 0.813860155524394,
+  "training_seconds_this_session": 1140.9,
+  "splits": {
+    "train": {
+      "images": 6380,
+      "lesions": 4781,
+      "benign": 5160,
+      "malignant": 1220,
+      "malignant_fraction": 0.1912,
+      "dx": {
+        "nv": 4299,
+        "bkl": 705,
+        "mel": 683,
+        "bcc": 329,
+        "akiec": 208,
+        "vasc": 81,
+        "df": 75
+      }
+    },
+    "val": {
+      "images": 1621,
+      "lesions": 1194,
+      "benign": 1277,
+      "malignant": 344,
+      "malignant_fraction": 0.2122,
+      "dx": {
+        "nv": 1043,
+        "mel": 208,
+        "bkl": 189,
+        "bcc": 85,
+        "akiec": 51,
+        "vasc": 27,
+        "df": 18
+      }
+    },
+    "test": {
+      "images": 2014,
+      "lesions": 1495,
+      "benign": 1624,
+      "malignant": 390,
+      "malignant_fraction": 0.1936,
+      "dx": {
+        "nv": 1363,
+        "mel": 222,
+        "bkl": 205,
+        "bcc": 100,
+        "akiec": 68,
+        "vasc": 34,
+        "df": 22
+      }
+    }
+  },
+  "imbalance_strategy": "oversample",
+  "model_config": {
+    "architecture": "googlenet",
+    "display_name": "GoogleNet (Inception v1, report notebook)",
+    "description": "Exact reconstruction of the notebook's Inception v1 variant (report screenshots): 64x64 input, two inception modules, Flatten -> Dense(512) -> Dropout(0.5) -> softmax, trained from scratch with Adam for 10 epochs at batch size 32.",
+    "input_size": 64,
+    "pretrained": false,
+    "additional_conv_layers": false,
+    "dense_units": 512,
+    "dropout": 0.5,
+    "phases": [
+      {
+        "name": "from_scratch",
+        "epochs": 10,
+        "learning_rate": 0.001,
+        "trainable": "all"
+      }
+    ]
+  },
+  "augmentation": {
+    "horizontal_flip_p": 0.5,
+    "rotation_angles": [
+      0.0,
+      15.0,
+      -15.0,
+      45.0,
+      -45.0
+    ],
+    "gaussian_noise": {
+      "p": 0.25,
+      "variance": 0.1
+    }
+  },
+  "contrast_stretch": {
+    "enabled": true,
+    "lower_percentile": 2.0,
+    "upper_percentile": 98.0,
+    "per_channel": false
+  },
+  "batch_size": 32,
+  "seed": 42
+}

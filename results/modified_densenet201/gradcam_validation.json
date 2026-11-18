@@ -1,0 +1,31 @@
+{
+  "model_name": "modified_densenet201",
+  "target_layer": "additional.conv2",
+  "randomised_modules": [
+    "additional",
+    "head"
+  ],
+  "n_images": 200,
+  "area_fractions": [
+    0.1,
+    0.2,
+    0.4
+  ],
+  "cam_drop_mean": {
+    "10%": 0.42774165973190975,
+    "20%": 0.4684096102001422,
+    "40%": 0.4637493359655855
+  },
+  "random_drop_mean": {
+    "10%": 0.09331901203685751,
+    "20%": 0.17993220496728704,
+    "40%": 0.3199765378815937
+  },
+  "cam_beats_random_fraction": {
+    "10%": 0.65,
+    "20%": 0.67,
+    "40%": 0.625
+  },
+  "randomization_spearman_mean": 0.10826325958793928,
+  "randomization_spearman_median": 0.0760949407244958
+}

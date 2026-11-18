@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Dataset (CC BY-NC 4.0; download with scripts/download_ham10000.py)
+data/HAM10000/
+data/splits/*.tmp
+
+# Trained weights (large; regenerate with scripts/train.py)
+checkpoints/
+*.pt
+*.pt.tmp
+
+# Logs
+results/*.log
+results/**/*.log
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Local tool configuration (machine-specific paths)
+.claude/

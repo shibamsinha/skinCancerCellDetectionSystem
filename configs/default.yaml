@@ -1,0 +1,150 @@
+# Central configuration for the reconstruction.
+# Evidence tags refer to RECONSTRUCTION_SPECIFICATION.md:
+#   [DOC] report text  [FIG] report figure/screenshot  [SRC] source paper
+#   [DATA] verified on HAM10000 metadata  [STD] standard practice (reconstructed)
+
+seed: 42                                   # [STD]
+primary_model: modified_densenet201        # [DOC]
+
+data:
+  images_dir: data/HAM10000/images
+  metadata_csv: data/HAM10000/HAM10000_metadata.csv
+  splits_csv: data/splits/ham10000_lesion_split.csv
+  validation_report: results/data_validation.json
+  test_fraction: 0.20                      # [FIG] 63 test batches of 32
+  val_fraction: 0.20                       # [FIG] 201 train batches of 32 -> 64/16/20
+  malignant_dx: [mel, bcc, akiec]          # [DATA] reproduces report Figs. 2 and 3 exactly
+  benign_dx: [nv, bkl, df, vasc]
+
+contrast_stretch:                          # [DOC] technique; parameters [STD]
+  enabled: true
+  lower_percentile: 2.0
+  upper_percentile: 98.0
+  per_channel: false
+
+augmentation:                              # training split only
+  horizontal_flip_p: 0.5                   # [DOC] flip; probability [STD]
+  rotation_angles: [0.0, 15.0, -15.0, 45.0, -45.0]   # [SRC] +/-15 and +/-45 degrees
+  gaussian_noise:
+    p: 0.25                                # [STD]
+    variance: 0.1                          # [DOC] (on [0, 1] intensities)
+
+training:
+  batch_size: 32                           # [FIG]
+  num_workers: 2                           # 2 data workers keep CPU load and heat down
+  imbalance_strategy: oversample           # [STD] oversample | class_weight | none
+  # Checkpoint selection / LR plateau / early stopping signal [STD]. ROC-AUC is used because the
+  # balanced (oversampled) training distribution differs from the natural validation prevalence,
+  # which makes validation loss track calibration shift rather than discrimination.
+  monitor: val_roc_auc                     # val_roc_auc | val_balanced_accuracy | val_loss
+  early_stopping_patience: 4               # [STD]
+  lr_plateau_patience: 2                   # [STD]
+  lr_plateau_factor: 0.5                   # [STD]
+  min_lr: 1.0e-7
+  log_every_n_batches: 50
+  device: auto
+
+# Host-friendly limits for a fanless 8 GB MacBook Air. Training is slower but runs cooler;
+# set cooldown to 0 and thermal_guard to false on a machine with active cooling.
+resources:
+  nice: 10                                 # lower CPU priority (Mac stays responsive)
+  torch_threads: 2
+  mps_memory_fraction: 0.55                # GPU memory cap = 0.55 x Metal recommended (~3.2 GB)
+  cooldown_seconds_per_batch: 0.35         # pause after each batch (GPU duty cycle ~ 70%)
+  fair_cooldown_multiplier: 2.0            # doubled while macOS thermal state is "fair"
+  thermal_guard: true                      # pause entirely at "serious" until it cools
+  max_thermal_pause_seconds: 900
+
+paths:
+  checkpoints_dir: checkpoints
+  results_dir: results
+
+# Phases: "new_layers" = backbone frozen, train additional convs + head (transfer learning);
+#         "last_block" = additionally unfreeze the last backbone stage (fine-tuning);
+#         "all" = every parameter trainable (used for the from-scratch GoogleNet).
+# Optimiser: Adam [FIG]; loss: cross-entropy on 2-way softmax [FIG]; 10 epochs per phase [FIG].
+models:
+  modified_densenet201:
+    architecture: modified_densenet201
+    display_name: Modified DenseNet201
+    description: >-
+      ImageNet-pretrained DenseNet201 (4 dense blocks, 3 transition layers) with
+      CONV1_1 (3x1, 128), CONV1_2 (1x3, 128) and CONV2 (3x3, 64) appended after
+      dense block 4, followed by GAP, BatchNorm, Dense(256) and Dense(2) + softmax.
+    input_size: 224
+    pretrained: true
+    additional_conv_layers: true
+    dense_units: 256
+    dropout: 0.0
+    phases:
+      - {name: transfer_learning, epochs: 10, learning_rate: 1.0e-3, trainable: new_layers}
+      - {name: fine_tuning,       epochs: 10, learning_rate: 1.0e-4, trainable: last_block}
+
+  densenet201:
+    architecture: densenet201
+    display_name: DenseNet201 (unmodified, ablation)
+    description: >-
+      Ablation baseline: the same pretrained DenseNet201 and classification head
+      but without the three additional convolutional layers.
+    input_size: 224
+    pretrained: true
+    additional_conv_layers: false
+    dense_units: 256
+    dropout: 0.0
+    phases:
+      - {name: transfer_learning, epochs: 10, learning_rate: 1.0e-3, trainable: new_layers}
+      - {name: fine_tuning,       epochs: 10, learning_rate: 1.0e-4, trainable: last_block}
+
+  mobilenet_v2:
+    architecture: mobilenet_v2
+    display_name: MobileNetV2
+    description: ImageNet-pretrained MobileNetV2 (report Fig. 4) with the shared classification head.
+    input_size: 224
+    pretrained: true
+    additional_conv_layers: false
+    dense_units: 256
+    dropout: 0.0
+    phases:
+      - {name: transfer_learning, epochs: 10, learning_rate: 1.0e-3, trainable: new_layers}
+      - {name: fine_tuning,       epochs: 10, learning_rate: 1.0e-4, trainable: last_block}
+
+  resnet50:
+    architecture: resnet50
+    display_name: ResNet50
+    description: ImageNet-pretrained ResNet50 with the shared classification head.
+    input_size: 224
+    pretrained: true
+    additional_conv_layers: false
+    dense_units: 256
+    dropout: 0.0
+    phases:
+      - {name: transfer_learning, epochs: 10, learning_rate: 1.0e-3, trainable: new_layers}
+      - {name: fine_tuning,       epochs: 10, learning_rate: 1.0e-4, trainable: last_block}
+
+  xception:
+    architecture: xception
+    display_name: Xception
+    description: ImageNet-pretrained Xception (original Keras weights, ported) with the shared classification head.
+    input_size: 224
+    pretrained: true
+    additional_conv_layers: false
+    dense_units: 256
+    dropout: 0.0
+    phases:
+      - {name: transfer_learning, epochs: 10, learning_rate: 1.0e-3, trainable: new_layers}
+      - {name: fine_tuning,       epochs: 10, learning_rate: 1.0e-4, trainable: last_block}
+
+  googlenet:
+    architecture: googlenet
+    display_name: GoogleNet (Inception v1, report notebook)
+    description: >-
+      Exact reconstruction of the notebook's Inception v1 variant (report screenshots):
+      64x64 input, two inception modules, Flatten -> Dense(512) -> Dropout(0.5) -> softmax,
+      trained from scratch with Adam for 10 epochs at batch size 32.
+    input_size: 64                         # [FIG]
+    pretrained: false                      # [FIG] built from scratch
+    additional_conv_layers: false
+    dense_units: 512                       # [FIG]
+    dropout: 0.5                           # [FIG]
+    phases:
+      - {name: from_scratch, epochs: 10, learning_rate: 1.0e-3, trainable: all}   # [FIG] Adam default lr

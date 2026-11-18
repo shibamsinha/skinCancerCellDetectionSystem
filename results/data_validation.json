@@ -1,0 +1,90 @@
+{
+  "validation": {
+    "total_rows": 10015,
+    "valid": 10015,
+    "missing": [],
+    "corrupted": [],
+    "unexpected_size": [],
+    "orphan_files": 0,
+    "ok": true
+  },
+  "class_distribution": {
+    "binary": {
+      "Benign": 8061,
+      "Malignant": 1954
+    },
+    "dx": {
+      "nv": 6705,
+      "mel": 1113,
+      "bkl": 1099,
+      "bcc": 514,
+      "akiec": 327,
+      "vasc": 142,
+      "df": 115
+    }
+  },
+  "splits": {
+    "train": {
+      "images": 6380,
+      "lesions": 4781,
+      "benign": 5160,
+      "malignant": 1220,
+      "malignant_fraction": 0.1912,
+      "dx": {
+        "nv": 4299,
+        "bkl": 705,
+        "mel": 683,
+        "bcc": 329,
+        "akiec": 208,
+        "vasc": 81,
+        "df": 75
+      }
+    },
+    "val": {
+      "images": 1621,
+      "lesions": 1194,
+      "benign": 1277,
+      "malignant": 344,
+      "malignant_fraction": 0.2122,
+      "dx": {
+        "nv": 1043,
+        "mel": 208,
+        "bkl": 189,
+        "bcc": 85,
+        "akiec": 51,
+        "vasc": 27,
+        "df": 18
+      }
+    },
+    "test": {
+      "images": 2014,
+      "lesions": 1495,
+      "benign": 1624,
+      "malignant": 390,
+      "malignant_fraction": 0.1936,
+      "dx": {
+        "nv": 1363,
+        "mel": 222,
+        "bkl": 205,
+        "bcc": 100,
+        "akiec": 68,
+        "vasc": 34,
+        "df": 22
+      }
+    }
+  },
+  "binary_mapping": {
+    "malignant": [
+      "mel",
+      "bcc",
+      "akiec"
+    ],
+    "benign": [
+      "nv",
+      "bkl",
+      "df",
+      "vasc"
+    ]
+  },
+  "seed": 42
+}
